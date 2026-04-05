@@ -28,22 +28,12 @@ class PolylineEntity {
     this.options = const PolylineOptions(),
   }) : id = const Uuid().v4();
 
-  /// Converts the polyline to a JavaScript-compatible format.
-  ///
-  /// Used internally for interoperability with Yandex Maps JavaScript API.
-  JSPolylineEntity toJs() => JSPolylineEntity(
-        geometry.map((e) => e.toJs()).toList().toJS,
-        properties.toJs(),
-        options.toJs(),
-        id,
-      );
-
   /// Serializes the polyline to JSON format.
   ///
   /// Useful for storage or transmission of polyline data.
   Map<String, dynamic> toJson() => {
         'id': id,
-        'geometry': geometry.map((e) => [e.lat, e.lon]).toList(),
+        'geometry': geometry.map((e) => [e.lon, e.lat]).toList(),
         'properties': properties.toJson(),
         'options': options.toJson(),
       };

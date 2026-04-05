@@ -24,6 +24,6 @@ class PointEntity {
   /// Converts the point to a JavaScript-compatible array format.
   ///
   /// Used for interoperability with the Yandex Maps JavaScript API.
-  /// Returns a JS array where first element is latitude and second is longitude.
-  JSArray<JSNumber> toJs() => [lat.toJS, lon.toJS].toJS;
+  /// Returns a JS array where first element is longitude and second is latitude.
+  JSArray<JSNumber> toJs() => [lon.toJS, lat.toJS].toJS;
 }

@@ -31,22 +31,13 @@ class PolygonEntity {
     this.options = const PolygonOptions(),
   }) : id = const Uuid().v4();
 
-  /// Converts the polygon to a JavaScript-compatible format.
-  ///
-  /// Used internally for interoperability with Yandex Maps JavaScript API.
-  JSPolygonEntity toJs() => JSPolygonEntity(
-        geometry.map((e) => e.map((e) => e.toJs()).toList().toJS).toList().toJS,
-        properties.toJs(),
-        options.toJs(),
-        id,
-      );
-
   /// Serializes the polygon to JSON format.
   ///
   /// Useful for storage or transmission of polygon data.
   Map<String, dynamic> toJson() => {
         'id': id,
-        'geometry': geometry.map((e) => e.map((e) => [e.lat, e.lon]).toList()).toList(),
+        'geometry':
+            geometry.map((e) => e.map((e) => [e.lon, e.lat]).toList()).toList(),
         'properties': properties.toJson(),
         'options': options.toJson(),
       };

@@ -4,7 +4,8 @@ part of '../yandex_js_maps.dart';
 
 /// JS interop: Moves the map camera to specified coordinates
 @JS('yandexMapController.moveTo')
-external JSPromise moveToJs(double lat, double lon, int zoom, int durationMs, String mapId);
+external JSPromise moveToJs(
+    double lon, double lat, int zoom, int durationMs, String mapId);
 
 /// JS interop: Sets the map zoom level
 @JS('yandexMapController.setZoom')
@@ -20,15 +21,20 @@ external JSPromise zoomOutJs(int durationMs, String mapId);
 
 /// JS interop: Gets current zoom level
 @JS('yandexMapController.getZoom')
-external JSPromise<JSBigInt> getZoomJs(String mapId);
+external JSPromise<JSNumber> getZoomJs(String mapId);
 
 /// JS interop: Gets current map center coordinates
 @JS('yandexMapController.getCenter')
 external JSPromise<JSArray> getCenterJs(String mapId);
 
+/// JS interop: Gets current visible bounds as [swLat, swLon, neLat, neLon]
+@JS('yandexMapController.getBounds')
+external JSPromise<JSArray> getBoundsJs(String mapId);
+
 /// JS interop: Fits map view to specified bounds
 @JS('yandexMapController.fitBounds')
-external JSPromise fitBoundsJs(double swLat, double swLon, double neLat, double neLon, int durationMs, String mapId);
+external JSPromise fitBoundsJs(double swLon, double swLat, double neLon,
+    double neLat, int durationMs, String mapId);
 
 /// JS interop: Enables/disables scroll zoom interaction
 @JS('yandexMapController.enableScrollZoom')
@@ -38,14 +44,10 @@ external JSPromise enableScrollZoomJs(bool enabled, String mapId);
 @JS('yandexMapController.enableDrag')
 external JSPromise enableDragJs(bool enabled, String mapId);
 
-/// JS interop: Sets the map type (e.g. 'map', 'satellite')
-@JS('yandexMapController.setMapType')
-external JSPromise setMapTypeJs(String type, String mapId);
-
 /// JS interop: Adds a placemark to the map
 @JS('yandexMapController.addPlacemark')
-external JSPromise addPlacemarkJs(JSArray<JSNumber> geometry, JSPlacemarkProperties properties,
-    JSPlacemarkOptions options, String mapId, String placemarkId);
+external JSPromise addPlacemarkJs(JSArray<JSNumber> geometry, JSAny properties,
+    JSAny options, String mapId, String placemarkId);
 
 /// JS interop: Removes a placemark from the map
 @JS('yandexMapController.removePlacemark')
@@ -53,20 +55,23 @@ external JSPromise removePlacemarkJs(String placemarkId, String mapId);
 
 /// JS interop: Updates placemark position
 @JS('yandexMapController.updatePlacemarkGeometry')
-external JSPromise updatePlacemarkGeometryJs(String placemarkId, JSArray<JSNumber> newGeometry);
+external JSPromise updatePlacemarkGeometryJs(
+    String placemarkId, JSArray<JSNumber> newGeometry);
 
 /// JS interop: Updates placemark properties
 @JS('yandexMapController.updatePlacemarkProperties')
-external JSPromise updatePlacemarkPropertiesJs(String placemarkId, JSPlacemarkProperties newProperties);
+external JSPromise updatePlacemarkPropertiesJs(
+    String placemarkId, JSAny newProperties);
 
 /// JS interop: Updates placemark visual options
 @JS('yandexMapController.updatePlacemarkOptions')
-external JSPromise updatePlacemarkOptionsJs(String placemarkId, JSPlacemarkOptions newOptions);
+external JSPromise updatePlacemarkOptionsJs(
+    String placemarkId, JSAny newOptions);
 
 /// JS interop: Adds a polygon to the map
 @JS('yandexMapController.addPolygon')
-external JSPromise addPolygonJs(
-    JSArray geometry, JSPolygonProperties properties, JSPolygonOptions options, String mapId, String polygonId);
+external JSPromise addPolygonJs(JSArray geometry, JSAny properties,
+    JSAny options, String mapId, String polygonId);
 
 /// JS interop: Removes a polygon from the map
 @JS('yandexMapController.removePolygon')
@@ -74,20 +79,22 @@ external JSPromise removePolygonJs(String polygonId, String mapId);
 
 /// JS interop: Updates polygon geometry
 @JS('yandexMapController.updatePolygonGeometry')
-external JSPromise updatePolygonGeometryJs(String polygonId, JSArray newGeometry);
+external JSPromise updatePolygonGeometryJs(
+    String polygonId, JSArray newGeometry);
 
 /// JS interop: Updates polygon properties
 @JS('yandexMapController.updatePolygonProperties')
-external JSPromise updatePolygonPropertiesJs(String polygonId, JSPolygonProperties newProperties);
+external JSPromise updatePolygonPropertiesJs(
+    String polygonId, JSAny newProperties);
 
 /// JS interop: Updates polygon visual options
 @JS('yandexMapController.updatePolygonOptions')
-external JSPromise updatePolygonOptionsJs(String polygonId, JSPolygonOptions newOptions);
+external JSPromise updatePolygonOptionsJs(String polygonId, JSAny newOptions);
 
 /// JS interop: Adds a polyline to the map
 @JS('yandexMapController.addPolyline')
-external JSPromise addPolylineJs(
-    JSArray geometry, JSPolylineProperties properties, JSPolylineOptions options, String mapId, String polylineId);
+external JSPromise addPolylineJs(JSArray geometry, JSAny properties,
+    JSAny options, String mapId, String polylineId);
 
 /// JS interop: Removes a polyline from the map
 @JS('yandexMapController.removePolyline')
@@ -95,33 +102,52 @@ external JSPromise removePolylineJs(String polylineId, String mapId);
 
 /// JS interop: Updates polyline geometry
 @JS('yandexMapController.updatePolylineGeometry')
-external JSPromise updatePolylineGeometryJs(String polylineId, JSArray newGeometry);
+external JSPromise updatePolylineGeometryJs(
+    String polylineId, JSArray newGeometry);
 
 /// JS interop: Updates polyline properties
 @JS('yandexMapController.updatePolylineProperties')
-external JSPromise updatePolylinePropertiesJs(String polylineId, JSPolylineProperties newProps);
+external JSPromise updatePolylinePropertiesJs(
+    String polylineId, JSAny newProps);
 
 /// JS interop: Updates polyline visual options
 @JS('yandexMapController.updatePolylineOptions')
-external JSPromise updatePolylineOptionsJs(String polylineId, JSPolylineOptions newOpts);
+external JSPromise updatePolylineOptionsJs(String polylineId, JSAny newOpts);
 
-/// JS interop: Performs geocoding request
-@JS('yandexMapController.geocode')
-external JSPromise<JSArray<JsGeocodeResult>> geocodeJs(JSAny request, JSGeocodeOptions options);
+/// JS interop: Adds a clustered group of placemarks to the map
+@JS('yandexMapController.addCluster')
+external JSPromise addClusterJs(JSAny clusterData, String mapId);
 
-/// JS interop: Performs search suggestions request
-@JS('yandexMapController.suggest')
-external JSPromise<JSArray<JsSuggestResult>> suggestJs(JSString request, JSSuggestOptions options);
+/// JS interop: Shows a pulsing user-location dot using browser Geolocation API
+@JS('yandexMapController.showUserLocation')
+external JSPromise showUserLocationJs(String mapId);
+
+/// JS interop: Hides the user-location dot and stops geolocation tracking
+@JS('yandexMapController.hideUserLocation')
+external JSPromise hideUserLocationJs(String mapId);
+
+/// JS interop: Removes a cluster from the map
+@JS('yandexMapController.removeCluster')
+external JSPromise removeClusterJs(String clusterId, String mapId);
+
+/// JS interop: Updates the placemarks of an existing cluster
+@JS('yandexMapController.updateCluster')
+external JSPromise updateClusterJs(String clusterId, JSAny data, String mapId);
+
+/// JS interop: Updates map scheme layer theme and/or customization
+@JS('yandexMapController.setTheme')
+external JSPromise setThemeJs(JSAny? theme, JSAny? customization, String mapId);
 
 // Dart Controller Class =======================================================
 
 /// Controller class for interacting with Yandex Maps JavaScript API.
 ///
-/// Provides a Dart-friendly interface to manage map state, markers, shapes,
-/// and geocoding operations. All methods return Futures that complete when
+/// Provides a Dart-friendly interface to manage map state and map objects.
+/// All methods return Futures that complete when
 /// the corresponding JavaScript operation finishes.
 class YandexJsMapController {
-  YandexJsMapController._(this._mapId, this.placemarks, this.polygons, this.polylines);
+  YandexJsMapController._(
+      this._mapId, this.placemarks, this.polygons, this.polylines);
 
   /// Internal map identifier used for DOM element reference
   final String _mapId;
@@ -134,6 +160,52 @@ class YandexJsMapController {
 
   /// List of currently displayed polylines on the map
   final List<PolylineEntity> polylines;
+
+  // Tap callbacks are stored in static Dart Maps keyed by entity ID.
+  // A single JS dispatcher per type routes click events from the JS layer to Dart.
+  static final Map<String, void Function(PointEntity)> _placemarkTapCallbacks =
+      {};
+  static final Map<String, void Function(PointEntity, int)>
+      _clusterTapCallbacks = {};
+  static final Map<String, void Function(PointEntity)> _userLocationCallbacks =
+      {};
+  static bool _placemarkDispatcherReady = false;
+  static bool _clusterDispatcherReady = false;
+  static bool _userLocationDispatcherReady = false;
+
+  void _ensurePlacemarkDispatcher() {
+    if (_placemarkDispatcherReady) return;
+    _placemarkDispatcherReady = true;
+    js.context['_yandexMapPlacemarkTap'] =
+        js.allowInterop((String id, dynamic lat, dynamic lon) {
+      _placemarkTapCallbacks[id]?.call(
+        PointEntity((lat as num).toDouble(), (lon as num).toDouble()),
+      );
+    });
+  }
+
+  void _ensureClusterDispatcher() {
+    if (_clusterDispatcherReady) return;
+    _clusterDispatcherReady = true;
+    js.context['_yandexMapClusterTap'] =
+        js.allowInterop((String id, dynamic lat, dynamic lon, dynamic count) {
+      _clusterTapCallbacks[id]?.call(
+        PointEntity((lat as num).toDouble(), (lon as num).toDouble()),
+        (count as num).toInt(),
+      );
+    });
+  }
+
+  void _ensureUserLocationDispatcher() {
+    if (_userLocationDispatcherReady) return;
+    _userLocationDispatcherReady = true;
+    js.context['_yandexMapUserLocationUpdate'] =
+        js.allowInterop((String mapId, dynamic lat, dynamic lon) {
+      _userLocationCallbacks[mapId]?.call(
+        PointEntity((lat as num).toDouble(), (lon as num).toDouble()),
+      );
+    });
+  }
 
   /// Internal initializer used by the factory to create controller instances
   static YandexJsMapController _init(
@@ -151,30 +223,33 @@ class YandexJsMapController {
   /// - [point] The target geographic coordinates
   /// - [zoom] The desired zoom level (default: 10)
   /// - [durationMs] Animation duration in milliseconds (default: 300)
-  Future<void> moveTo(PointEntity point, {int zoom = 10, int durationMs = 300}) async {
-    await moveToJs(point.lat, point.lon, zoom, durationMs, _mapId).toDart;
+  Future<void> moveTo(PointEntity point,
+      {int zoom = 10, int durationMs = 300}) async {
+    await moveToJs(point.lon, point.lat, zoom, durationMs, _mapId).toDart;
   }
 
   /// Sets the map zoom level.
   ///
   /// - [zoom] The target zoom level
   /// - [durationMs] Animation duration in milliseconds (default: 300)
-  Future<void> setZoom(int zoom, {int durationMs = 300}) async => await setZoomJs(zoom, durationMs, _mapId).toDart;
+  Future<void> setZoom(int zoom, {int durationMs = 300}) async =>
+      await setZoomJs(zoom, durationMs, _mapId).toDart;
 
   /// Zooms in the map by one level.
   ///
   /// - [durationMs] Animation duration in milliseconds (default: 300)
-  Future<void> zoomIn({int durationMs = 300}) async => await zoomInJs(durationMs, _mapId).toDart;
+  Future<void> zoomIn({int durationMs = 300}) async =>
+      await zoomInJs(durationMs, _mapId).toDart;
 
   /// Zooms out the map by one level.
   ///
   /// - [durationMs] Animation duration in milliseconds (default: 300)
-  Future<void> zoomOut({int durationMs = 300}) async => await zoomOutJs(durationMs, _mapId).toDart;
+  Future<void> zoomOut({int durationMs = 300}) async =>
+      await zoomOutJs(durationMs, _mapId).toDart;
 
   /// Gets the current zoom level of the map.
-  ///
-  /// Return Current zoom level as integer
-  Future<int> getZoom() async => (await getZoomJs(_mapId).toDart) as int;
+  Future<int> getZoom() async =>
+      (await getZoomJs(_mapId).toDart).toDartDouble.round();
 
   /// Gets the current center coordinates of the map view.
   ///
@@ -189,28 +264,44 @@ class YandexJsMapController {
     return null;
   }
 
+  /// Gets the current visible bounds of the map.
+  ///
+  /// Returns `[southWest, northEast]` or `null` if unavailable.
+  Future<List<PointEntity>?> getBounds() async {
+    final result = (await getBoundsJs(_mapId).toDart) as List;
+    if (result.length == 4) {
+      return [
+        PointEntity(
+            (result[0] as num).toDouble(), (result[1] as num).toDouble()),
+        PointEntity(
+            (result[2] as num).toDouble(), (result[3] as num).toDouble()),
+      ];
+    }
+    return null;
+  }
+
   /// Adjusts the map view to contain the specified bounding box.
   ///
   /// - [southWest] The south-west corner of the bounding box
   /// - [northEast] The north-east corner of the bounding box
   /// - [durationMs] Animation duration in milliseconds (default: 300)
-  Future<void> fitBounds(PointEntity southWest, PointEntity northEast, {int durationMs = 300}) async =>
-      await fitBoundsJs(southWest.lat, southWest.lon, northEast.lat, northEast.lon, durationMs, _mapId).toDart;
+  Future<void> fitBounds(PointEntity southWest, PointEntity northEast,
+          {int durationMs = 300}) async =>
+      await fitBoundsJs(southWest.lon, southWest.lat, northEast.lon,
+              northEast.lat, durationMs, _mapId)
+          .toDart;
 
   /// Enables or disables zooming via mouse scroll/touch pinch.
   ///
   /// - [enabled] Whether to enable scroll zoom interaction
-  Future<void> enableScrollZoom(bool enabled) async => await enableScrollZoomJs(enabled, _mapId).toDart;
+  Future<void> enableScrollZoom(bool enabled) async =>
+      await enableScrollZoomJs(enabled, _mapId).toDart;
 
   /// Enables or disables dragging the map with mouse/touch.
   ///
   /// - [enabled] Whether to enable drag interaction
-  Future<void> enableDrag(bool enabled) async => await enableDragJs(enabled, _mapId).toDart;
-
-  /// Changes the base map type (e.g. street map, satellite, hybrid).
-  ///
-  /// - [type] The map type from [MapType] enum
-  Future<void> setMapType(MapType type) async => await setMapTypeJs(type.name, _mapId).toDart;
+  Future<void> enableDrag(bool enabled) async =>
+      await enableDragJs(enabled, _mapId).toDart;
 
   // Placemark Operations =====================================================
 
@@ -218,36 +309,53 @@ class YandexJsMapController {
   ///
   /// - [placemark] The placemark entity to add
   Future<void> addPlacemark(PlacemarkEntity placemark) async {
-    final jsPlacemark = placemark.toJs();
-    await addPlacemarkJs(jsPlacemark.geometry, jsPlacemark.properties, jsPlacemark.options, _mapId, placemark.id)
-        .toDart;
+    if (placemark.onTap != null) {
+      _ensurePlacemarkDispatcher();
+      _placemarkTapCallbacks[placemark.id] = placemark.onTap!;
+    }
+    await addPlacemarkJs(
+      placemark.geometry.toJs(),
+      _jsify(placemark.properties.toJson()),
+      _jsify(placemark.options.toJson()),
+      _mapId,
+      placemark.id,
+    ).toDart;
   }
 
   /// Removes a placemark from the map.
   ///
   /// - [placemarkId] The ID of the placemark to remove
-  Future<void> removePlacemark(String placemarkId) async => await removePlacemarkJs(placemarkId, _mapId).toDart;
+  Future<void> removePlacemark(String placemarkId) async {
+    _placemarkTapCallbacks.remove(placemarkId);
+    await removePlacemarkJs(placemarkId, _mapId).toDart;
+  }
 
   /// Updates the position of an existing placemark.
   ///
   /// - [placemarkId] The ID of the placemark to update
   /// - [newGeometry] The new geographic coordinates
-  Future<void> updatePlacemarkGeometry(String placemarkId, PointEntity newGeometry) async =>
+  Future<void> updatePlacemarkGeometry(
+          String placemarkId, PointEntity newGeometry) async =>
       await updatePlacemarkGeometryJs(placemarkId, newGeometry.toJs()).toDart;
 
   /// Updates the properties (e.g. data fields) of a placemark.
   ///
   /// - [placemarkId] The ID of the placemark to update
   /// - [newProperties] The new properties object
-  Future<void> updatePlacemarkProperties(String placemarkId, PlacemarkProperties newProperties) async =>
-      await updatePlacemarkPropertiesJs(placemarkId, newProperties.toJs()).toDart;
+  Future<void> updatePlacemarkProperties(
+          String placemarkId, PlacemarkProperties newProperties) async =>
+      await updatePlacemarkPropertiesJs(
+              placemarkId, _jsify(newProperties.toJson()))
+          .toDart;
 
   /// Updates the visual options (e.g. icon, color) of a placemark.
   ///
   /// - [placemarkId] The ID of the placemark to update
   /// - [newOptions] The new visual options
-  Future<void> updatePlacemarkOptions(String placemarkId, PlacemarkOptions newOptions) async =>
-      await updatePlacemarkOptionsJs(placemarkId, newOptions.toJs()).toDart;
+  Future<void> updatePlacemarkOptions(
+          String placemarkId, PlacemarkOptions newOptions) async =>
+      await updatePlacemarkOptionsJs(placemarkId, _jsify(newOptions.toJson()))
+          .toDart;
 
   // Polygon Operations =======================================================
 
@@ -255,21 +363,35 @@ class YandexJsMapController {
   ///
   /// - [polygon] The polygon entity to add
   Future<void> addPolygon(PolygonEntity polygon) async {
-    final jsPolygon = polygon.toJs();
-    await addPolygonJs(jsPolygon.geometry, jsPolygon.properties, jsPolygon.options, _mapId, polygon.id).toDart;
+    final jsGeometry = polygon.geometry
+        .map((ring) => ring.map((point) => point.toJs()).toList().toJS)
+        .toList()
+        .toJS;
+    await addPolygonJs(
+      jsGeometry,
+      _jsify(polygon.properties.toJson()),
+      _jsify(polygon.options.toJson()),
+      _mapId,
+      polygon.id,
+    ).toDart;
   }
 
   /// Removes a polygon from the map.
   ///
   /// - [polygonId] The ID of the polygon to remove
-  Future<void> removePolygon(String polygonId) async => await removePolygonJs(polygonId, _mapId).toDart;
+  Future<void> removePolygon(String polygonId) async =>
+      await removePolygonJs(polygonId, _mapId).toDart;
 
   /// Updates the geometry (vertex coordinates) of a polygon.
   ///
   /// - [polygonId] The ID of the polygon to update
   /// - [newGeometry] The new array of coordinate rings
-  Future<void> updatePolygonGeometry(String polygonId, List<List<PointEntity>> newGeometry) async {
-    final jsGeometry = newGeometry.map((ring) => ring.map((point) => point.toJs()).toList().toJS).toList().toJS;
+  Future<void> updatePolygonGeometry(
+      String polygonId, List<List<PointEntity>> newGeometry) async {
+    final jsGeometry = newGeometry
+        .map((ring) => ring.map((point) => point.toJs()).toList().toJS)
+        .toList()
+        .toJS;
     await updatePolygonGeometryJs(polygonId, jsGeometry).toDart;
   }
 
@@ -277,15 +399,19 @@ class YandexJsMapController {
   ///
   /// - [polygonId] The ID of the polygon to update
   /// - [newProperties] The new properties object
-  Future<void> updatePolygonProperties(String polygonId, PolygonProperties newProperties) async =>
-      await updatePolygonPropertiesJs(polygonId, newProperties.toJs()).toDart;
+  Future<void> updatePolygonProperties(
+          String polygonId, PolygonProperties newProperties) async =>
+      await updatePolygonPropertiesJs(polygonId, _jsify(newProperties.toJson()))
+          .toDart;
 
   /// Updates the visual options (e.g. fill color, stroke) of a polygon.
   ///
   /// - [polygonId] The ID of the polygon to update
   /// - [newOptions] The new visual options
-  Future<void> updatePolygonOptions(String polygonId, PolygonOptions newOptions) async =>
-      await updatePolygonOptionsJs(polygonId, newOptions.toJs()).toDart;
+  Future<void> updatePolygonOptions(
+          String polygonId, PolygonOptions newOptions) async =>
+      await updatePolygonOptionsJs(polygonId, _jsify(newOptions.toJson()))
+          .toDart;
 
   // Polyline Operations ======================================================
 
@@ -293,20 +419,29 @@ class YandexJsMapController {
   ///
   /// - [polyline] The polyline entity to add
   Future<void> addPolyline(PolylineEntity polyline) async {
-    final jsPoly = polyline.toJs();
-    await addPolylineJs(jsPoly.geometry, jsPoly.properties, jsPoly.options, _mapId, polyline.id).toDart;
+    final jsGeometry =
+        polyline.geometry.map((point) => point.toJs()).toList().toJS;
+    await addPolylineJs(
+      jsGeometry,
+      _jsify(polyline.properties.toJson()),
+      _jsify(polyline.options.toJson()),
+      _mapId,
+      polyline.id,
+    ).toDart;
   }
 
   /// Removes a polyline from the map.
   ///
   /// - [polylineId] The ID of the polyline to remove
-  Future<void> removePolyline(String polylineId) async => await removePolylineJs(polylineId, _mapId).toDart;
+  Future<void> removePolyline(String polylineId) async =>
+      await removePolylineJs(polylineId, _mapId).toDart;
 
   /// Updates the geometry (vertex coordinates) of a polyline.
   ///
   /// - [polylineId] The ID of the polyline to update
   /// - [newGeom] The new array of coordinates
-  Future<void> updatePolylineGeometry(String polylineId, List<PointEntity> newGeom) async {
+  Future<void> updatePolylineGeometry(
+      String polylineId, List<PointEntity> newGeom) async {
     final jsGeometry = newGeom.map((point) => point.toJs()).toList().toJS;
     await updatePolylineGeometryJs(polylineId, jsGeometry).toDart;
   }
@@ -315,52 +450,86 @@ class YandexJsMapController {
   ///
   /// - [polylineId] The ID of the polyline to update
   /// - [props] The new properties object
-  Future<void> updatePolylineProperties(String polylineId, PolylineProperties props) async =>
-      await updatePolylinePropertiesJs(polylineId, props.toJs()).toDart;
+  Future<void> updatePolylineProperties(
+          String polylineId, PolylineProperties props) async =>
+      await updatePolylinePropertiesJs(polylineId, _jsify(props.toJson()))
+          .toDart;
 
   /// Updates the visual options (e.g. color, width) of a polyline.
   ///
   /// - [polylineId] The ID of the polyline to update
   /// - [opts] The new visual options
-  Future<void> updatePolylineOptions(String polylineId, PolylineOptions opts) async =>
-      await updatePolylineOptionsJs(polylineId, opts.toJs()).toDart;
+  Future<void> updatePolylineOptions(
+          String polylineId, PolylineOptions opts) async =>
+      await updatePolylineOptionsJs(polylineId, _jsify(opts.toJson())).toDart;
 
-  // Geocoding Services =======================================================
+  // Cluster Operations =======================================================
 
-  /// Performs geocoding (address → coordinates or coordinates → address).
+  /// Adds a clustered group of placemarks to the map.
   ///
-  /// - [request] Either an address string or [PointEntity] coordinates
-  /// - [options] Additional geocoding parameters
-  /// Return List of [GeocodeResult] objects with matches
-  /// Throws ArgumentError if request type is invalid
-  Future<List<GeocodeResult>> geocode<T>(T request, {GeocodeOptions options = const GeocodeOptions()}) async {
-    final jsRequest = switch (request) {
-      final String s => s.toJS,
-      final PointEntity p => p.toJs(),
-      _ => throw ArgumentError('Request must be either String or PointEntity'),
-    };
-
-    final rawResult = await geocodeJs(jsRequest, options.toJs()).toDart;
-    final items = rawResult.toDart.cast<JsGeocodeResult>();
-
-    return items
-        .map((js) => GeocodeResult(
-              point: PointEntity(js.lat, js.lon),
-              name: js.name,
-              description: js.description,
-            ))
-        .toList();
+  /// Placemarks are automatically grouped based on zoom level using
+  /// the ymaps3 `@yandex/ymaps3-clusterer` package.
+  Future<void> addCluster(ClusterEntity cluster) async {
+    if (cluster.onTap != null) {
+      _ensureClusterDispatcher();
+      _clusterTapCallbacks[cluster.id] = cluster.onTap!;
+    }
+    await addClusterJs(_jsify(cluster.toJson()), _mapId).toDart;
   }
 
-  /// Gets address suggestions for partial user input.
-  ///
-  /// - [request] Partial address input string
-  /// - [options] Additional suggestion parameters
-  /// Return List of [SuggestResult] objects with matches
-  Future<List<SuggestResult>> suggest(String request, {SuggestOptions options = const SuggestOptions()}) async {
-    final rawResult = await suggestJs(request.toJS, options.toJs()).toDart;
-    final items = rawResult.toDart.cast<JsSuggestResult>();
-
-    return items.map((js) => SuggestResult(displayName: js.displayName, value: js.value)).toList();
+  /// Removes a cluster group from the map.
+  Future<void> removeCluster(String clusterId) async {
+    _clusterTapCallbacks.remove(clusterId);
+    await removeClusterJs(clusterId, _mapId).toDart;
   }
+
+  /// Replaces the placemarks inside an existing cluster.
+  Future<void> updateCluster(
+      String clusterId, List<PlacemarkEntity> newPlacemarks) async {
+    await updateClusterJs(
+      clusterId,
+      _jsify({'placemarks': newPlacemarks.map((p) => p.toJson()).toList()}),
+      _mapId,
+    ).toDart;
+  }
+
+  // User Location Operations =================================================
+
+  /// Shows a pulsing blue dot at the device's current GPS position.
+  ///
+  /// Position is tracked continuously via the browser Geolocation API.
+  /// - [onLocationUpdate] optional callback fired on every position update.
+  Future<void> showUserLocation(
+      {void Function(PointEntity)? onLocationUpdate}) async {
+    if (onLocationUpdate != null) {
+      _ensureUserLocationDispatcher();
+      _userLocationCallbacks[_mapId] = onLocationUpdate;
+    }
+    await showUserLocationJs(_mapId).toDart;
+  }
+
+  /// Removes the user-location dot and stops geolocation tracking.
+  Future<void> hideUserLocation() async {
+    _userLocationCallbacks.remove(_mapId);
+    await hideUserLocationJs(_mapId).toDart;
+  }
+
+  /// Updates the map scheme layer theme and/or customization.
+  ///
+  /// Both parameters are optional — pass null to leave that aspect unchanged.
+  ///
+  /// [theme] — theme name, e.g. `'light'` or `'dark'`.
+  /// [customization] — list of customization rule objects (Yandex Maps
+  /// customization JSON format). Pass null to keep the current customization.
+  Future<void> setTheme({
+    String? theme,
+    List<Map<String, dynamic>>? customization,
+  }) async {
+    final jsTheme = theme != null ? js_util.jsify(theme) as JSAny : null;
+    final jsCustomization =
+        customization != null ? js_util.jsify(customization) as JSAny : null;
+    await setThemeJs(jsTheme, jsCustomization, _mapId).toDart;
+  }
+
+  JSAny _jsify(Map<String, dynamic> value) => js_util.jsify(value) as JSAny;
 }

@@ -19,19 +19,10 @@ class MapState {
 
   /// Enabled map interaction behaviors
   ///
-  /// Common values: ['default', 'scrollZoom', 'drag', 'multiTouch']
-  final List<String>? behaviors;
-
-  /// UI controls to display on the map
-  ///
-  /// Common values: ['zoomControl', 'typeSelector', 'fullscreenControl']
-  final List<String>? controls;
+  final List<MapBehavior>? behaviors;
 
   /// Margins around the map viewport in pixels [top, right, bottom, left]
   final List<double>? margin;
-
-  /// Base map display type
-  final MapType? type;
 
   /// Creates map initial state configuration
   ///
@@ -39,29 +30,23 @@ class MapState {
   /// - [bounds] Optional bounding box for constrained view
   /// - [zoom] Initial zoom level (default 10)
   /// - [behaviors] Enabled interaction behaviors
-  /// - [controls] Visible UI controls
   /// - [margin] Viewport margins in pixels
-  /// - [type] Base map display type
   const MapState({
     this.center = const PointEntity(55.75, 37.62),
     this.bounds,
     this.zoom = 10,
-    this.behaviors = const ['default'],
-    this.controls = const ['default'],
+    this.behaviors = const [],
     this.margin,
-    this.type = MapType.map,
   });
 
   /// Serializes the map state to JSON format
   Map<String, dynamic> toJson() {
     return {
-      'center': [center.lat, center.lon],
-      if (bounds != null) 'bounds': bounds?.map((e) => [e.lat, e.lon]).toList(),
+      'center': [center.lon, center.lat],
+      if (bounds != null) 'bounds': bounds?.map((e) => [e.lon, e.lat]).toList(),
       'zoom': zoom,
-      if (behaviors != null) 'behaviors': behaviors,
-      if (controls != null) 'controls': controls,
+      'behaviors': behaviors?.map((e) => e.value).toList(),
       if (margin != null) 'margin': margin,
-      if (type != null) 'type': type?.name,
     };
   }
 }

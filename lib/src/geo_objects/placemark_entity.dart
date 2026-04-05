@@ -17,33 +17,23 @@ class PlacemarkEntity {
   /// Visual styling and behavior options
   final PlacemarkOptions options;
 
-  /// Creates a map placemark with the specified attributes.
-  ///
-  /// - [geometry] The geographic coordinates (required)
-  /// - [properties] Content and informational properties
-  /// - [options] Visual styling and behavior options
+  /// Called when the user taps this placemark.
+  /// Not serialized — wired up via JS callback registry.
+  final void Function(PointEntity point)? onTap;
+
   PlacemarkEntity({
     required this.geometry,
     this.properties = const PlacemarkProperties(),
     this.options = const PlacemarkOptions(),
+    this.onTap,
   }) : id = const Uuid().v4();
-
-  /// Converts the placemark to a JavaScript-compatible format.
-  ///
-  /// Used internally for interoperability with Yandex Maps JavaScript API.
-  JSPlacemarkEntity toJs() => JSPlacemarkEntity(
-        geometry.toJs(),
-        properties.toJs(),
-        options.toJs(),
-        id,
-      );
 
   /// Serializes the placemark to JSON format.
   ///
   /// Useful for storage or transmission of placemark data.
   Map<String, dynamic> toJson() => {
         'id': id,
-        'geometry': [geometry.lat, geometry.lon],
+        'geometry': [geometry.lon, geometry.lat],
         'properties': properties.toJson(),
         'options': options.toJson(),
       };

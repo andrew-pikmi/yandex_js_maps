@@ -1,16 +1,6 @@
 name: yandex_js_maps
 description: A Flutter Web plugin for integrating Yandex Maps JS API using Dart JS interop.
-version: 1.0.1
-homepage: https://github.com/ignatuschka/yandex_js_maps
-repository: https://github.com/ignatuschka/yandex_js_maps
-issue_tracker: https://github.com/ignatuschka/yandex_js_maps/issues
-documentation: https://github.com/ignatuschka/yandex_js_maps#readme
-topics:
-  - flutter
-  - web
-  - maps
-  - yandex
-  - plugin
+version: 2.0.0
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
