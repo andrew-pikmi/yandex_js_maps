@@ -163,9 +163,9 @@ class YandexJsMapController {
 
   // Tap callbacks are stored in static Dart Maps keyed by entity ID.
   // A single JS dispatcher per type routes click events from the JS layer to Dart.
-  static final Map<String, void Function(PointEntity)> _placemarkTapCallbacks =
-      {};
-  static final Map<String, void Function(PointEntity, int)>
+  static final Map<String, (void Function(PointEntity, Object?), Object?)>
+      _placemarkTapCallbacks = {};
+  static final Map<String, (void Function(PointEntity, int, Object?), Object?)>
       _clusterTapCallbacks = {};
   static final Map<String, void Function(PointEntity)> _userLocationCallbacks =
       {};
@@ -178,9 +178,13 @@ class YandexJsMapController {
     _placemarkDispatcherReady = true;
     js.context['_yandexMapPlacemarkTap'] =
         js.allowInterop((String id, dynamic lat, dynamic lon) {
-      _placemarkTapCallbacks[id]?.call(
-        PointEntity((lat as num).toDouble(), (lon as num).toDouble()),
-      );
+      final entry = _placemarkTapCallbacks[id];
+      if (entry != null) {
+        entry.$1(
+          PointEntity((lat as num).toDouble(), (lon as num).toDouble()),
+          entry.$2,
+        );
+      }
     });
   }
 
@@ -189,10 +193,14 @@ class YandexJsMapController {
     _clusterDispatcherReady = true;
     js.context['_yandexMapClusterTap'] =
         js.allowInterop((String id, dynamic lat, dynamic lon, dynamic count) {
-      _clusterTapCallbacks[id]?.call(
-        PointEntity((lat as num).toDouble(), (lon as num).toDouble()),
-        (count as num).toInt(),
-      );
+      final entry = _clusterTapCallbacks[id];
+      if (entry != null) {
+        entry.$1(
+          PointEntity((lat as num).toDouble(), (lon as num).toDouble()),
+          (count as num).toInt(),
+          entry.$2,
+        );
+      }
     });
   }
 
@@ -311,7 +319,8 @@ class YandexJsMapController {
   Future<void> addPlacemark(PlacemarkEntity placemark) async {
     if (placemark.onTap != null) {
       _ensurePlacemarkDispatcher();
-      _placemarkTapCallbacks[placemark.id] = placemark.onTap!;
+      _placemarkTapCallbacks[placemark.id] =
+          (placemark.onTap!, placemark.userData);
     }
     await addPlacemarkJs(
       placemark.geometry.toJs(),
@@ -472,7 +481,21 @@ class YandexJsMapController {
   Future<void> addCluster(ClusterEntity cluster) async {
     if (cluster.onTap != null) {
       _ensureClusterDispatcher();
-      _clusterTapCallbacks[cluster.id] = cluster.onTap!;
+      _clusterTapCallbacks[cluster.id] = (cluster.onTap!, cluster.userData);
+    }
+    if (cluster.options.style is ClusterBuilderStyle) {
+      final builderStyle = cluster.options.style as ClusterBuilderStyle;
+      final placemarkMap = {for (final p in cluster.placemarks) p.id: p};
+      js.context['_yandexMapClusterIconBuilder_${cluster.id}'] =
+          js.allowInterop((dynamic idsArray) {
+        final idList = (js_util.dartify(idsArray)! as List).cast<String>();
+        final points = idList
+            .map((id) => placemarkMap[id])
+            .whereType<PlacemarkEntity>()
+            .toList();
+        final bytes = builderStyle.builder(points);
+        return 'data:image/png;base64,${base64.encode(bytes)}';
+      });
     }
     await addClusterJs(_jsify(cluster.toJson()), _mapId).toDart;
   }
@@ -480,6 +503,7 @@ class YandexJsMapController {
   /// Removes a cluster group from the map.
   Future<void> removeCluster(String clusterId) async {
     _clusterTapCallbacks.remove(clusterId);
+    js.context.deleteProperty('_yandexMapClusterIconBuilder_$clusterId');
     await removeClusterJs(clusterId, _mapId).toDart;
   }
 

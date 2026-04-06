@@ -26,7 +26,6 @@ class YandexJsMapFactory {
       ..id = 'yandex-map-script'
       ..type = 'text/javascript'
       ..src = 'https://api-maps.yandex.ru/v3/?$langPath$apiKeyPath';
-    print('https://api-maps.yandex.ru/v3/?$langPath$apiKeyPath');
 
     // Setup completer to handle script loading
     final completer = Completer<void>();

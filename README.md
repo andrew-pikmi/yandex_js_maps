@@ -92,32 +92,149 @@ class _MapPageState extends State<MapPage> {
 
 ## Controller examples
 
-```dart
-await _controller?.moveTo(const PointEntity(55.751244, 37.618423), zoom: 14);
-await _controller?.zoomIn();
-await _controller?.setTheme(theme: 'dark');
+### Placemarks
 
+Marker appearance is controlled by a `PlacemarkStyle` subtype passed to `PlacemarkOptions`:
+
+```dart
+// Built-in circle marker
 await _controller?.addPlacemark(
   PlacemarkEntity(
     geometry: const PointEntity(55.751244, 37.618423),
     properties: const PlacemarkProperties(hintContent: 'Kremlin'),
-    options: const PlacemarkOptions(iconColor: 'd32f2f', iconSize: 28),
-    onTap: (point) => debugPrint('placemark tap: ${point.lat}, ${point.lon}'),
+    options: const PlacemarkOptions(
+      style: PlacemarkCircleStyle(
+        iconColor: '#d32f2f',
+        iconSize: 28,
+      ),
+    ),
+    userData: {'id': 42, 'name': 'Kremlin'},
+    onTap: (point, userData) {
+      final data = userData as Map;
+      debugPrint('tapped: ${data['name']}');
+    },
   ),
 );
 
+// Custom image marker (rendered at natural size)
+final iconBytes = await _loadPngBytes(); // your Uint8List
+await _controller?.addPlacemark(
+  PlacemarkEntity(
+    geometry: const PointEntity(55.761773, 37.618972),
+    options: PlacemarkOptions(
+      style: PlacemarkImageStyle(iconBytes: iconBytes),
+    ),
+    onTap: (point, userData) => debugPrint('custom marker tapped'),
+  ),
+);
+```
+
+### Clusters
+
+Cluster appearance is controlled by a `ClusterStyle` subtype passed to `ClusterOptions`:
+
+```dart
+// Built-in circle cluster
 await _controller?.addCluster(
   ClusterEntity(
     placemarks: [
       PlacemarkEntity(geometry: const PointEntity(55.751244, 37.618423)),
       PlacemarkEntity(geometry: const PointEntity(55.752244, 37.619423)),
     ],
-    options: const ClusterOptions(gridSize: 80, clusterSize: 40),
+    options: const ClusterOptions(
+      gridSize: 80,
+      maxZoom: 14, // stop clustering above zoom 14
+      style: ClusterCircleStyle(color: '#1565C0', size: 40),
+    ),
+    userData: {'zone': 'center'},
+    onTap: (point, count, userData) {
+      final data = userData as Map;
+      debugPrint('cluster zone "${data['zone']}" · $count points');
+    },
   ),
 );
 
-await _controller?.showUserLocation(
-  onLocationUpdate: (point) => debugPrint('me: ${point.lat}, ${point.lon}'),
+// Custom image cluster
+final clusterIcon = await _renderClusterIcon();
+await _controller?.addCluster(
+  ClusterEntity(
+    placemarks: [...],
+    options: ClusterOptions(
+      style: ClusterImageStyle(iconBytes: clusterIcon),
+    ),
+  ),
+);
+
+// Dynamic icon based on cluster contents
+// Icons must be pre-rendered asynchronously and cached before addCluster is called,
+// because the builder is invoked synchronously by the JS clusterer.
+final iconA = await _renderIconA();
+final iconB = await _renderIconB();
+
+await _controller?.addCluster(
+  ClusterEntity(
+    placemarks: [
+      PlacemarkEntity(
+        geometry: const PointEntity(55.751244, 37.618423),
+        userData: {'category': 'restaurant'},
+      ),
+      PlacemarkEntity(
+        geometry: const PointEntity(55.752244, 37.619423),
+        userData: {'category': 'hotel'},
+      ),
+    ],
+    options: ClusterOptions(
+      style: ClusterBuilderStyle(
+        builder: (clusterPlacemarks) {
+          final categories = clusterPlacemarks
+              .map((p) => (p.userData as Map)['category'] as String)
+              .toSet();
+          return categories.length == 1 && categories.first == 'restaurant'
+              ? iconA
+              : iconB;
+        },
+      ),
+    ),
+  ),
+);
+```
+
+### Camera
+
+```dart
+await _controller?.moveTo(const PointEntity(55.751244, 37.618423), zoom: 14);
+await _controller?.zoomIn();
+await _controller?.setTheme(theme: 'dark');
+```
+
+## Style classes
+
+### PlacemarkStyle
+
+| Class | Description |
+|---|---|
+| `PlacemarkCircleStyle` | Built-in circle. Fields: `iconColor`, `iconSize`, `borderColor`, `borderWidth`, `hasShadow` |
+| `PlacemarkImageStyle` | Custom image from `Uint8List`. Rendered at natural size. |
+
+### ClusterStyle
+
+| Class | Description |
+|---|---|
+| `ClusterCircleStyle` | Built-in circle. Fields: `color`, `size`, `borderColor`, `borderWidth`, `hasShadow` |
+| `ClusterImageStyle` | Custom image from `Uint8List`. Rendered at natural size. |
+| `ClusterBuilderStyle` | Dynamic icon. `builder` receives the exact `List<PlacemarkEntity>` in the current cluster. Must return `Uint8List` synchronously — pre-render async icons before calling `addCluster`. |
+
+## userData
+
+Both `PlacemarkEntity` and `ClusterEntity` accept `userData: Object?`. It is not serialized to JS — it is stored in Dart and passed back to `onTap` as the last argument. Cast to your type inside the callback.
+
+```dart
+PlacemarkEntity(
+  geometry: ...,
+  userData: myModel,
+  onTap: (point, userData) {
+    final model = userData as MyModel;
+  },
 );
 ```
 

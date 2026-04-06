@@ -17,14 +17,19 @@ class PlacemarkEntity {
   /// Visual styling and behavior options
   final PlacemarkOptions options;
 
+  /// Arbitrary data attached to this placemark.
+  /// Not serialized — available in [onTap] for identifying the tapped object.
+  final Object? userData;
+
   /// Called when the user taps this placemark.
   /// Not serialized — wired up via JS callback registry.
-  final void Function(PointEntity point)? onTap;
+  final void Function(PointEntity point, Object? userData)? onTap;
 
   PlacemarkEntity({
     required this.geometry,
     this.properties = const PlacemarkProperties(),
     this.options = const PlacemarkOptions(),
+    this.userData,
     this.onTap,
   }) : id = const Uuid().v4();
 

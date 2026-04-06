@@ -13,15 +13,20 @@ class ClusterEntity {
   /// Visual and behavior options for the cluster
   final ClusterOptions options;
 
+  /// Arbitrary data attached to this cluster group.
+  /// Not serialized — available in [onTap] for identifying the tapped cluster.
+  final Object? userData;
+
   /// Called when the user taps the cluster marker.
   /// [point] is the geographic center of the cluster.
   /// [count] is the number of grouped placemarks.
   /// Not serialized — wired up via JS callback registry.
-  final void Function(PointEntity point, int count)? onTap;
+  final void Function(PointEntity point, int count, Object? userData)? onTap;
 
   ClusterEntity({
     required this.placemarks,
     this.options = const ClusterOptions(),
+    this.userData,
     this.onTap,
     String? id,
   }) : id = id ?? const Uuid().v4();

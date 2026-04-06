@@ -98,6 +98,7 @@ class _MapDemoPageState extends State<MapDemoPage> {
 //               setTheme · showUserLocation · hideUserLocation
 //               onMapTap · onMapLongTap · onCameraPositionChanged
 //               MapBehavior · PlacemarkOptions.iconBytes (canvas-rendered pin)
+//               userData — arbitrary Dart object passed through onTap
 
 class _MarkersTab extends StatefulWidget {
   const _MarkersTab({required this.onEvent});
@@ -225,17 +226,32 @@ class _MarkersTabState extends State<_MarkersTab> {
       48,
     );
 
+    // userData is any Dart object — cast it back to your type in onTap.
     final kremlin = PlacemarkEntity(
       geometry: const PointEntity(55.751244, 37.618423),
       properties: const PlacemarkProperties(hintContent: 'Kremlin'),
-      options: PlacemarkOptions(iconBytes: kremlinIcon, iconSize: 48),
-      onTap: (p) => widget.onEvent('Marker "Kremlin": ${_fmt(p)}'),
+      options:
+          PlacemarkOptions(style: PlacemarkImageStyle(iconBytes: kremlinIcon)),
+      userData: {'name': 'Kremlin', 'type': 'landmark', 'rating': 5},
+      onTap: (p, userData) {
+        final data = userData as Map;
+        widget.onEvent(
+          'Marker "${data['name']}" · type: ${data['type']} · rating: ${data['rating']}',
+        );
+      },
     );
     final theater = PlacemarkEntity(
       geometry: const PointEntity(55.761773, 37.618972),
       properties: const PlacemarkProperties(hintContent: 'Bolshoy Theatre'),
-      options: PlacemarkOptions(iconBytes: theaterIcon, iconSize: 48),
-      onTap: (p) => widget.onEvent('Marker "Bolshoy Theatre": ${_fmt(p)}'),
+      options:
+          PlacemarkOptions(style: PlacemarkImageStyle(iconBytes: theaterIcon)),
+      userData: {'name': 'Bolshoy Theatre', 'type': 'culture', 'rating': 5},
+      onTap: (p, userData) {
+        final data = userData as Map;
+        widget.onEvent(
+          'Marker "${data['name']}" · type: ${data['type']} · rating: ${data['rating']}',
+        );
+      },
     );
 
     await ctrl.addPlacemark(kremlin);
@@ -245,8 +261,9 @@ class _MarkersTabState extends State<_MarkersTab> {
 }
 
 // ─── Clusters Tab ────────────────────────────────────────────────────────────
-// Demonstrates: addCluster · removeCluster · ClusterOptions.iconBytes
-//               (canvas-rendered cluster icon, count badge overlay)
+// Demonstrates: addCluster · removeCluster · userData in placemarks
+//               clusterIconBuilder — dynamic icon based on cluster contents:
+//                 all restaurants → orange, all hotels → blue, mixed → purple
 
 class _ClustersTab extends StatefulWidget {
   const _ClustersTab({required this.onEvent});
@@ -293,28 +310,82 @@ class _ClustersTabState extends State<_ClustersTab> {
   }
 
   Future<void> _addCluster(YandexJsMapController ctrl) async {
-    final icon = await _renderToPng(
-      (c, s) => _paintClusterIcon(c, s, const Color(0xFF1565C0)),
-      48,
-      48,
+    // Pre-render the three possible cluster icons asynchronously,
+    // then use the cached bytes synchronously in clusterIconBuilder.
+    final iconRestaurant = await _renderToPng(
+      (c, s) => _paintClusterIcon(c, s, const Color(0xFFE65100)), // orange
+      48, 48,
+    );
+    final iconHotel = await _renderToPng(
+      (c, s) => _paintClusterIcon(c, s, const Color(0xFF1565C0)), // blue
+      48, 48,
+    );
+    final iconMixed = await _renderToPng(
+      (c, s) => _paintClusterIcon(c, s, const Color(0xFF6A1B9A)), // purple
+      48, 48,
     );
 
-    final cluster = ClusterEntity(
-      placemarks: [
-        PlacemarkEntity(geometry: const PointEntity(55.751244, 37.618423)),
-        PlacemarkEntity(geometry: const PointEntity(55.752244, 37.619423)),
-        PlacemarkEntity(geometry: const PointEntity(55.753244, 37.620423)),
-        PlacemarkEntity(geometry: const PointEntity(55.754244, 37.621423)),
-        PlacemarkEntity(geometry: const PointEntity(55.755244, 37.622423)),
-        PlacemarkEntity(geometry: const PointEntity(55.756244, 37.623423)),
-      ],
-      options: ClusterOptions(
-        iconBytes: icon,
-        clusterSize: 48,
-        gridSize: 80,
+    // Placemarks carry userData with a 'category' field.
+    final placemarks = [
+      PlacemarkEntity(
+        geometry: const PointEntity(55.751244, 37.618423),
+        properties: const PlacemarkProperties(hintContent: 'Cafe Pushkin'),
+        userData: {'name': 'Cafe Pushkin', 'category': 'restaurant'},
       ),
-      onTap: (p, count) =>
-          widget.onEvent('Cluster ($count points): ${_fmt(p)}'),
+      PlacemarkEntity(
+        geometry: const PointEntity(55.752244, 37.619423),
+        properties: const PlacemarkProperties(hintContent: 'Varvarка Bar'),
+        userData: {'name': 'Varvarка Bar', 'category': 'restaurant'},
+      ),
+      PlacemarkEntity(
+        geometry: const PointEntity(55.753244, 37.620423),
+        properties: const PlacemarkProperties(hintContent: 'Hotel Metropol'),
+        userData: {'name': 'Hotel Metropol', 'category': 'hotel'},
+      ),
+      PlacemarkEntity(
+        geometry: const PointEntity(55.754244, 37.621423),
+        properties: const PlacemarkProperties(hintContent: 'Hotel National'),
+        userData: {'name': 'Hotel National', 'category': 'hotel'},
+      ),
+      PlacemarkEntity(
+        geometry: const PointEntity(55.755244, 37.622423),
+        properties: const PlacemarkProperties(hintContent: 'Selfie Restaurant'),
+        userData: {'name': 'Selfie Restaurant', 'category': 'restaurant'},
+      ),
+      PlacemarkEntity(
+        geometry: const PointEntity(55.756244, 37.623423),
+        properties: const PlacemarkProperties(hintContent: 'Four Seasons'),
+        userData: {'name': 'Four Seasons', 'category': 'hotel'},
+      ),
+    ];
+
+    final cluster = ClusterEntity(
+      placemarks: placemarks,
+      options: ClusterOptions(
+        gridSize: 80,
+        // ClusterBuilderStyle receives exactly the placemarks in this cluster.
+        // Icons are pre-rendered above; the builder just picks the right one.
+        style: ClusterBuilderStyle(
+          builder: (clusterPlacemarks) {
+            final categories = clusterPlacemarks
+                .map((p) => (p.userData as Map)['category'] as String)
+                .toSet();
+            if (categories.length == 1) {
+              return categories.first == 'restaurant'
+                  ? iconRestaurant
+                  : iconHotel;
+            }
+            return iconMixed;
+          },
+        ),
+      ),
+      userData: {'zone': 'city-center'},
+      onTap: (p, count, userData) {
+        final data = userData as Map;
+        widget.onEvent(
+          'Cluster zone "${data['zone']}" · $count points · ${_fmt(p)}',
+        );
+      },
     );
 
     await ctrl.addCluster(cluster);
@@ -323,7 +394,6 @@ class _ClustersTabState extends State<_ClustersTab> {
 }
 
 // ─── Polygons Tab ─────────────────────────────────────────────────────────────
-// Demonstrates: PolygonEntity via constructor · PolygonOptions · onMapTap
 
 class _PolygonsTab extends StatelessWidget {
   const _PolygonsTab({required this.onEvent});
@@ -366,7 +436,6 @@ class _PolygonsTab extends StatelessWidget {
 }
 
 // ─── Polylines Tab ───────────────────────────────────────────────────────────
-// Demonstrates: PolylineEntity via constructor · PolylineOptions · onMapTap
 
 class _PolylinesTab extends StatelessWidget {
   const _PolylinesTab({required this.onEvent});
@@ -406,8 +475,6 @@ class _PolylinesTab extends StatelessWidget {
 }
 
 // ─── Camera Tab ──────────────────────────────────────────────────────────────
-// Demonstrates: moveTo · fitBounds · getZoom · getCenter · getBounds
-//               enableScrollZoom · enableDrag · onCameraPositionChanged
 
 class _CameraTab extends StatefulWidget {
   const _CameraTab({required this.onEvent});
@@ -591,6 +658,7 @@ class _Divider extends StatelessWidget {
 
 // ─── Canvas helpers ──────────────────────────────────────────────────────────
 
+/// Async render — use when the caller can await (e.g. in initState / onMapCreated).
 Future<Uint8List> _renderToPng(
   void Function(Canvas, Size) paint,
   int width,
