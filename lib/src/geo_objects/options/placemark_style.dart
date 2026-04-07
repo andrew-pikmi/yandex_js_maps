@@ -54,15 +54,23 @@ class PlacemarkCircleStyle extends PlacemarkStyle {
 }
 
 /// Custom image marker style.
-/// The image is rendered at its natural size — no scaling applied.
+/// By default the image is rendered at its natural size.
+/// Use [iconSize] to set an explicit display size in logical pixels
+/// (useful when the image was rendered at device pixel ratio).
 class PlacemarkImageStyle extends PlacemarkStyle {
   /// Raw image bytes, encoded as a base64 data URL and passed to JS.
   final Uint8List iconBytes;
 
-  PlacemarkImageStyle({required this.iconBytes});
+  /// Logical display size for the icon in pixels.
+  /// If null the image renders at its natural (intrinsic) dimensions.
+  final ({int width, int height})? iconSize;
+
+  PlacemarkImageStyle({required this.iconBytes, this.iconSize});
 
   @override
   Map<String, dynamic> toJson() => {
         'iconDataUrl': 'data:image/png;base64,${base64.encode(iconBytes)}',
+        if (iconSize != null) 'iconWidth': iconSize!.width,
+        if (iconSize != null) 'iconHeight': iconSize!.height,
       };
 }

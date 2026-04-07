@@ -169,6 +169,8 @@ class YandexJsMapController {
       _clusterTapCallbacks = {};
   static final Map<String, void Function(PointEntity)> _userLocationCallbacks =
       {};
+  static final Map<String, Set<String>> _clusterPlacemarkIds = {};
+  static final Map<String, Set<String>> _builderTapIds = {};
   static bool _placemarkDispatcherReady = false;
   static bool _clusterDispatcherReady = false;
   static bool _userLocationDispatcherReady = false;
@@ -483,9 +485,21 @@ class YandexJsMapController {
       _ensureClusterDispatcher();
       _clusterTapCallbacks[cluster.id] = (cluster.onTap!, cluster.userData);
     }
+    // Register individual placemark tap callbacks for markers inside the cluster
+    _ensurePlacemarkDispatcher();
+    final pmIds = <String>{};
+    for (final p in cluster.placemarks) {
+      pmIds.add(p.id);
+      if (p.onTap != null) {
+        _placemarkTapCallbacks[p.id] = (p.onTap!, p.userData);
+      }
+    }
+    _clusterPlacemarkIds[cluster.id] = pmIds;
+
     if (cluster.options.style is ClusterBuilderStyle) {
       final builderStyle = cluster.options.style as ClusterBuilderStyle;
       final placemarkMap = {for (final p in cluster.placemarks) p.id: p};
+      _ensureClusterDispatcher();
       js.context['_yandexMapClusterIconBuilder_${cluster.id}'] =
           js.allowInterop((dynamic idsArray) {
         final idList = (js_util.dartify(idsArray)! as List).cast<String>();
@@ -493,16 +507,63 @@ class YandexJsMapController {
             .map((id) => placemarkMap[id])
             .whereType<PlacemarkEntity>()
             .toList();
-        final bytes = builderStyle.builder(points);
-        return 'data:image/png;base64,${base64.encode(bytes)}';
+        final resultOrFuture = builderStyle.builder(points);
+        if (resultOrFuture is Future<ClusterAppearance>) {
+          // Async path — build a native JS Promise via dart:js only.
+          // Mixing dart:js_util.jsify with dart:js_interop's .toJS causes the
+          // resolved value to cross the boundary as a Dart wrapper, so JS
+          // spread ({ ...options, ...resolved }) silently copies nothing.
+          js.JsFunction? resolvePromise;
+          final jsPromise = js.JsObject(
+            js.context['Promise'] as js.JsFunction,
+            [
+              js.allowInterop((dynamic resolve, dynamic _) {
+                resolvePromise = resolve as js.JsFunction;
+              }),
+            ],
+          );
+          resultOrFuture.then((a) {
+            resolvePromise?.apply([
+              js.JsObject.jsify(_serializeAppearance(a, cluster.id, idList)),
+            ]);
+          });
+          return js.JsObject.jsify({'_promise': jsPromise});
+        }
+        // Sync path — dart:js JsObject.jsify is unwrapped correctly by
+        // allowInterop; dart:js_util.jsify is not.
+        return js.JsObject.jsify(
+            _serializeAppearance(resultOrFuture, cluster.id, idList));
       });
     }
     await addClusterJs(_jsify(cluster.toJson()), _mapId).toDart;
   }
 
+  static Map<String, dynamic> _serializeAppearance(
+    ClusterAppearance appearance,
+    String clusterId,
+    List<String> placemarkIds,
+  ) {
+    final result = <String, dynamic>{};
+    if (appearance.style != null) {
+      result.addAll(appearance.style!.toJson());
+    }
+    if (appearance.onTap != null) {
+      final sortedIds = List<String>.from(placemarkIds)..sort();
+      final tapId = '${clusterId}_${sortedIds.join(',')}';
+      _clusterTapCallbacks[tapId] = (appearance.onTap!, appearance.userData);
+      (_builderTapIds[clusterId] ??= {}).add(tapId);
+      result['tapId'] = tapId;
+    }
+    return result;
+  }
+
   /// Removes a cluster group from the map.
   Future<void> removeCluster(String clusterId) async {
     _clusterTapCallbacks.remove(clusterId);
+    _clusterPlacemarkIds
+        .remove(clusterId)
+        ?.forEach(_placemarkTapCallbacks.remove);
+    _builderTapIds.remove(clusterId)?.forEach(_clusterTapCallbacks.remove);
     js.context.deleteProperty('_yandexMapClusterIconBuilder_$clusterId');
     await removeClusterJs(clusterId, _mapId).toDart;
   }
@@ -510,6 +571,18 @@ class YandexJsMapController {
   /// Replaces the placemarks inside an existing cluster.
   Future<void> updateCluster(
       String clusterId, List<PlacemarkEntity> newPlacemarks) async {
+    // Clean old placemark tap callbacks and register new ones
+    _clusterPlacemarkIds[clusterId]?.forEach(_placemarkTapCallbacks.remove);
+    _ensurePlacemarkDispatcher();
+    final pmIds = <String>{};
+    for (final p in newPlacemarks) {
+      pmIds.add(p.id);
+      if (p.onTap != null) {
+        _placemarkTapCallbacks[p.id] = (p.onTap!, p.userData);
+      }
+    }
+    _clusterPlacemarkIds[clusterId] = pmIds;
+
     await updateClusterJs(
       clusterId,
       _jsify({'placemarks': newPlacemarks.map((p) => p.toJson()).toList()}),

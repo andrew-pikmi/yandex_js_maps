@@ -227,11 +227,16 @@ class _MarkersTabState extends State<_MarkersTab> {
     );
 
     // userData is any Dart object — cast it back to your type in onTap.
+    // iconSize ensures icons display at logical 48x48 regardless of pixelRatio.
     final kremlin = PlacemarkEntity(
       geometry: const PointEntity(55.751244, 37.618423),
       properties: const PlacemarkProperties(hintContent: 'Kremlin'),
-      options:
-          PlacemarkOptions(style: PlacemarkImageStyle(iconBytes: kremlinIcon)),
+      options: PlacemarkOptions(
+        style: PlacemarkImageStyle(
+          iconBytes: kremlinIcon,
+          iconSize: (width: 48, height: 48),
+        ),
+      ),
       userData: {'name': 'Kremlin', 'type': 'landmark', 'rating': 5},
       onTap: (p, userData) {
         final data = userData as Map;
@@ -243,8 +248,12 @@ class _MarkersTabState extends State<_MarkersTab> {
     final theater = PlacemarkEntity(
       geometry: const PointEntity(55.761773, 37.618972),
       properties: const PlacemarkProperties(hintContent: 'Bolshoy Theatre'),
-      options:
-          PlacemarkOptions(style: PlacemarkImageStyle(iconBytes: theaterIcon)),
+      options: PlacemarkOptions(
+        style: PlacemarkImageStyle(
+          iconBytes: theaterIcon,
+          iconSize: (width: 48, height: 48),
+        ),
+      ),
       userData: {'name': 'Bolshoy Theatre', 'type': 'culture', 'rating': 5},
       onTap: (p, userData) {
         final data = userData as Map;
@@ -261,9 +270,9 @@ class _MarkersTabState extends State<_MarkersTab> {
 }
 
 // ─── Clusters Tab ────────────────────────────────────────────────────────────
-// Demonstrates: addCluster · removeCluster · userData in placemarks
-//               clusterIconBuilder — dynamic icon based on cluster contents:
-//                 all restaurants → orange, all hotels → blue, mixed → purple
+// Demonstrates: addCluster · removeCluster · per-placemark onTap in clusters
+//               async ClusterBuilderStyle with per-cluster onTap/userData
+//               iconSize for correct display at devicePixelRatio
 
 class _ClustersTab extends StatefulWidget {
   const _ClustersTab({required this.onEvent});
@@ -310,75 +319,115 @@ class _ClustersTabState extends State<_ClustersTab> {
   }
 
   Future<void> _addCluster(YandexJsMapController ctrl) async {
-    // Pre-render the three possible cluster icons asynchronously,
-    // then use the cached bytes synchronously in clusterIconBuilder.
-    final iconRestaurant = await _renderToPng(
-      (c, s) => _paintClusterIcon(c, s, const Color(0xFFE65100)), // orange
-      48, 48,
-    );
-    final iconHotel = await _renderToPng(
-      (c, s) => _paintClusterIcon(c, s, const Color(0xFF1565C0)), // blue
-      48, 48,
-    );
-    final iconMixed = await _renderToPng(
-      (c, s) => _paintClusterIcon(c, s, const Color(0xFF6A1B9A)), // purple
-      48, 48,
-    );
-
-    // Placemarks carry userData with a 'category' field.
+    // Placemarks carry userData and individual onTap handlers.
+    // When zoomed in enough to see individual markers, tapping them fires onTap.
     final placemarks = [
       PlacemarkEntity(
         geometry: const PointEntity(55.751244, 37.618423),
         properties: const PlacemarkProperties(hintContent: 'Cafe Pushkin'),
         userData: {'name': 'Cafe Pushkin', 'category': 'restaurant'},
+        onTap: (p, userData) {
+          final data = userData as Map;
+          widget.onEvent('Placemark "${data['name']}" tapped · ${_fmt(p)}');
+        },
       ),
       PlacemarkEntity(
         geometry: const PointEntity(55.752244, 37.619423),
         properties: const PlacemarkProperties(hintContent: 'Varvarка Bar'),
         userData: {'name': 'Varvarка Bar', 'category': 'restaurant'},
+        onTap: (p, userData) {
+          final data = userData as Map;
+          widget.onEvent('Placemark "${data['name']}" tapped · ${_fmt(p)}');
+        },
       ),
       PlacemarkEntity(
         geometry: const PointEntity(55.753244, 37.620423),
         properties: const PlacemarkProperties(hintContent: 'Hotel Metropol'),
         userData: {'name': 'Hotel Metropol', 'category': 'hotel'},
+        onTap: (p, userData) {
+          final data = userData as Map;
+          widget.onEvent('Placemark "${data['name']}" tapped · ${_fmt(p)}');
+        },
       ),
       PlacemarkEntity(
         geometry: const PointEntity(55.754244, 37.621423),
         properties: const PlacemarkProperties(hintContent: 'Hotel National'),
         userData: {'name': 'Hotel National', 'category': 'hotel'},
+        onTap: (p, userData) {
+          final data = userData as Map;
+          widget.onEvent('Placemark "${data['name']}" tapped · ${_fmt(p)}');
+        },
       ),
       PlacemarkEntity(
         geometry: const PointEntity(55.755244, 37.622423),
         properties: const PlacemarkProperties(hintContent: 'Selfie Restaurant'),
         userData: {'name': 'Selfie Restaurant', 'category': 'restaurant'},
+        onTap: (p, userData) {
+          final data = userData as Map;
+          widget.onEvent('Placemark "${data['name']}" tapped · ${_fmt(p)}');
+        },
       ),
       PlacemarkEntity(
         geometry: const PointEntity(55.756244, 37.623423),
         properties: const PlacemarkProperties(hintContent: 'Four Seasons'),
         userData: {'name': 'Four Seasons', 'category': 'hotel'},
+        onTap: (p, userData) {
+          final data = userData as Map;
+          widget.onEvent('Placemark "${data['name']}" tapped · ${_fmt(p)}');
+        },
       ),
     ];
+
+    // Logical icon size (48x48 rendered at 2x → 96x96 pixels, displayed at 48x48).
+    const logicalSize = 48;
 
     final cluster = ClusterEntity(
       placemarks: placemarks,
       options: ClusterOptions(
         gridSize: 80,
-        // ClusterBuilderStyle receives exactly the placemarks in this cluster.
-        // Icons are pre-rendered above; the builder just picks the right one.
+        // Async ClusterBuilderStyle — renders icons on demand with per-cluster
+        // onTap and userData. All concurrent builder calls run in parallel.
         style: ClusterBuilderStyle(
-          builder: (clusterPlacemarks) {
+          builder: (clusterPlacemarks) async {
             final categories = clusterPlacemarks
                 .map((p) => (p.userData as Map)['category'] as String)
                 .toSet();
-            if (categories.length == 1) {
-              return categories.first == 'restaurant'
-                  ? iconRestaurant
-                  : iconHotel;
+            final Color color;
+            final String label;
+            if (categories.length == 1 && categories.first == 'restaurant') {
+              color = const Color(0xFFE65100);
+              label = 'restaurants';
+            } else if (categories.length == 1) {
+              color = const Color(0xFF1565C0);
+              label = 'hotels';
+            } else {
+              color = const Color(0xFF6A1B9A);
+              label = 'mixed';
             }
-            return iconMixed;
+
+            final iconBytes = await _renderToPng(
+              (c, s) => _paintClusterIcon(c, s, color),
+              logicalSize,
+              logicalSize,
+            );
+
+            return ClusterAppearance(
+              style: ClusterImageStyle(
+                iconBytes: iconBytes,
+                iconSize: (width: logicalSize, height: logicalSize),
+              ),
+              userData: {'type': label, 'count': clusterPlacemarks.length},
+              onTap: (p, count, userData) {
+                final data = userData as Map;
+                widget.onEvent(
+                  'Cluster "$label" · ${data['count']} points · ${_fmt(p)}',
+                );
+              },
+            );
           },
         ),
       ),
+      // Fallback onTap — used when builder doesn't provide per-cluster onTap
       userData: {'zone': 'city-center'},
       onTap: (p, count, userData) {
         final data = userData as Map;
