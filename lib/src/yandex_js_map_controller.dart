@@ -501,13 +501,18 @@ class YandexJsMapController {
       final placemarkMap = {for (final p in cluster.placemarks) p.id: p};
       _ensureClusterDispatcher();
       js.context['_yandexMapClusterIconBuilder_${cluster.id}'] =
-          js.allowInterop((dynamic idsArray) {
+          js.allowInterop((dynamic idsArray, dynamic lat, dynamic lon) {
         final idList = (js_util.dartify(idsArray)! as List).cast<String>();
         final points = idList
             .map((id) => placemarkMap[id])
             .whereType<PlacemarkEntity>()
             .toList();
-        final resultOrFuture = builderStyle.builder(points);
+        final location = PointEntity(
+          (lat as num).toDouble(),
+          (lon as num).toDouble(),
+        );
+
+        final resultOrFuture = builderStyle.builder(points, location);
         if (resultOrFuture is Future<ClusterAppearance>) {
           // Async path — build a native JS Promise via dart:js only.
           // Mixing dart:js_util.jsify with dart:js_interop's .toJS causes the

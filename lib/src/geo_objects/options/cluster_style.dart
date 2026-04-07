@@ -97,7 +97,9 @@ class ClusterAppearance {
 /// Not serialized — registered as a JS callback in the controller.
 class ClusterBuilderStyle extends ClusterStyle {
   final FutureOr<ClusterAppearance> Function(
-      List<PlacemarkEntity> clusterPlacemarks) builder;
+    List<PlacemarkEntity> clusterPlacemarks,
+    PointEntity point,
+  ) builder;
 
   ClusterBuilderStyle({required this.builder});
 

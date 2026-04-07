@@ -185,30 +185,32 @@ class _MarkersTabState extends State<_MarkersTab> {
                   },
           ),
         ]),
-        YandexJsMap(
-          mapState: const MapState(
-            center: PointEntity(55.751244, 37.618423),
-            zoom: 12,
-            behaviors: [
-              MapBehavior.drag,
-              MapBehavior.scrollZoom,
-              MapBehavior.pinchZoom,
-              MapBehavior.dblClick,
-            ],
+        Expanded(
+          child: YandexJsMap(
+            mapState: const MapState(
+              center: PointEntity(55.751244, 37.618423),
+              zoom: 12,
+              behaviors: [
+                MapBehavior.drag,
+                MapBehavior.scrollZoom,
+                MapBehavior.pinchZoom,
+                MapBehavior.dblClick,
+              ],
+            ),
+            onMapTap: (p) => widget.onEvent('Map tap: ${_fmt(p)}'),
+            onMapLongTap: (p) => widget.onEvent('Long tap: ${_fmt(p)}'),
+            onCameraPositionChanged: (pos, finished) {
+              if (finished) {
+                widget.onEvent(
+                  'Camera: ${_fmt(pos.center)}, zoom ${pos.zoom.toStringAsFixed(1)}',
+                );
+              }
+            },
+            onMapCreated: (ctrl) {
+              setState(() => _ctrl = ctrl);
+              unawaited(_addMarkers(ctrl));
+            },
           ),
-          onMapTap: (p) => widget.onEvent('Map tap: ${_fmt(p)}'),
-          onMapLongTap: (p) => widget.onEvent('Long tap: ${_fmt(p)}'),
-          onCameraPositionChanged: (pos, finished) {
-            if (finished) {
-              widget.onEvent(
-                'Camera: ${_fmt(pos.center)}, zoom ${pos.zoom.toStringAsFixed(1)}',
-              );
-            }
-          },
-          onMapCreated: (ctrl) {
-            setState(() => _ctrl = ctrl);
-            unawaited(_addMarkers(ctrl));
-          },
         ),
       ],
     );
@@ -303,16 +305,18 @@ class _ClustersTabState extends State<_ClustersTab> {
                   },
           ),
         ]),
-        YandexJsMap(
-          mapState: const MapState(
-            center: PointEntity(55.755864, 37.617698),
-            zoom: 10,
+        Expanded(
+          child: YandexJsMap(
+            mapState: const MapState(
+              center: PointEntity(55.755864, 37.617698),
+              zoom: 10,
+            ),
+            onMapTap: (p) => widget.onEvent('Cluster map tap: ${_fmt(p)}'),
+            onMapCreated: (ctrl) {
+              setState(() => _ctrl = ctrl);
+              unawaited(_addCluster(ctrl));
+            },
           ),
-          onMapTap: (p) => widget.onEvent('Cluster map tap: ${_fmt(p)}'),
-          onMapCreated: (ctrl) {
-            setState(() => _ctrl = ctrl);
-            unawaited(_addCluster(ctrl));
-          },
         ),
       ],
     );
@@ -388,7 +392,7 @@ class _ClustersTabState extends State<_ClustersTab> {
         // Async ClusterBuilderStyle — renders icons on demand with per-cluster
         // onTap and userData. All concurrent builder calls run in parallel.
         style: ClusterBuilderStyle(
-          builder: (clusterPlacemarks) async {
+          builder: (clusterPlacemarks, _) async {
             final categories = clusterPlacemarks
                 .map((p) => (p.userData as Map)['category'] as String)
                 .toSet();
@@ -452,32 +456,35 @@ class _PolygonsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        YandexJsMap(
-          mapState: const MapState(
-            center: PointEntity(55.751, 37.616),
-            zoom: 12,
-          ),
-          polygons: [
-            PolygonEntity(
-              geometry: const [
-                [
-                  PointEntity(55.742, 37.600),
-                  PointEntity(55.758, 37.602),
-                  PointEntity(55.760, 37.628),
-                  PointEntity(55.744, 37.632),
-                ],
-              ],
-              properties: const PolygonProperties(hintContent: 'Test polygon'),
-              options: const PolygonOptions(
-                fillColor: '2e7d32',
-                fillOpacity: 0.28,
-                strokeColor: '1b5e20',
-                strokeWidth: 3,
-              ),
+        Expanded(
+          child: YandexJsMap(
+            mapState: const MapState(
+              center: PointEntity(55.751, 37.616),
+              zoom: 12,
             ),
-          ],
-          onMapTap: (p) => onEvent('Polygon map tap: ${_fmt(p)}'),
-          onMapCreated: (_) {},
+            polygons: [
+              PolygonEntity(
+                geometry: const [
+                  [
+                    PointEntity(55.742, 37.600),
+                    PointEntity(55.758, 37.602),
+                    PointEntity(55.760, 37.628),
+                    PointEntity(55.744, 37.632),
+                  ],
+                ],
+                properties:
+                    const PolygonProperties(hintContent: 'Test polygon'),
+                options: const PolygonOptions(
+                  fillColor: '2e7d32',
+                  fillOpacity: 0.28,
+                  strokeColor: '1b5e20',
+                  strokeWidth: 3,
+                ),
+              ),
+            ],
+            onMapTap: (p) => onEvent('Polygon map tap: ${_fmt(p)}'),
+            onMapCreated: (_) {},
+          ),
         ),
       ],
     );
@@ -494,29 +501,31 @@ class _PolylinesTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        YandexJsMap(
-          mapState: const MapState(
-            center: PointEntity(55.752, 37.624),
-            zoom: 12,
-          ),
-          polylines: [
-            PolylineEntity(
-              geometry: const [
-                PointEntity(55.745, 37.607),
-                PointEntity(55.750, 37.617),
-                PointEntity(55.756, 37.630),
-                PointEntity(55.761, 37.643),
-              ],
-              properties: const PolylineProperties(hintContent: 'Route'),
-              options: const PolylineOptions(
-                strokeColor: 'f57c00',
-                strokeWidth: 4,
-                strokeOpacity: 0.95,
-              ),
+        Expanded(
+          child: YandexJsMap(
+            mapState: const MapState(
+              center: PointEntity(55.752, 37.624),
+              zoom: 12,
             ),
-          ],
-          onMapTap: (p) => onEvent('Polyline map tap: ${_fmt(p)}'),
-          onMapCreated: (_) {},
+            polylines: [
+              PolylineEntity(
+                geometry: const [
+                  PointEntity(55.745, 37.607),
+                  PointEntity(55.750, 37.617),
+                  PointEntity(55.756, 37.630),
+                  PointEntity(55.761, 37.643),
+                ],
+                properties: const PolylineProperties(hintContent: 'Route'),
+                options: const PolylineOptions(
+                  strokeColor: 'f57c00',
+                  strokeWidth: 4,
+                  strokeOpacity: 0.95,
+                ),
+              ),
+            ],
+            onMapTap: (p) => onEvent('Polyline map tap: ${_fmt(p)}'),
+            onMapCreated: (_) {},
+          ),
         ),
       ],
     );
@@ -633,22 +642,24 @@ class _CameraTabState extends State<_CameraTab> {
             ],
           ),
         ),
-        YandexJsMap(
-          mapState: const MapState(
-            center: PointEntity(55.755864, 37.617698),
-            zoom: 11,
+        Expanded(
+          child: YandexJsMap(
+            mapState: const MapState(
+              center: PointEntity(55.755864, 37.617698),
+              zoom: 11,
+            ),
+            onCameraPositionChanged: (pos, finished) {
+              if (finished) {
+                widget.onEvent(
+                  'Camera: ${_fmt(pos.center)}, zoom ${pos.zoom.toStringAsFixed(1)}',
+                );
+              }
+            },
+            onMapTap: (p) => widget.onEvent('Camera tab tap: ${_fmt(p)}'),
+            onMapCreated: (ctrl) {
+              setState(() => _ctrl = ctrl);
+            },
           ),
-          onCameraPositionChanged: (pos, finished) {
-            if (finished) {
-              widget.onEvent(
-                'Camera: ${_fmt(pos.center)}, zoom ${pos.zoom.toStringAsFixed(1)}',
-              );
-            }
-          },
-          onMapTap: (p) => widget.onEvent('Camera tab tap: ${_fmt(p)}'),
-          onMapCreated: (ctrl) {
-            setState(() => _ctrl = ctrl);
-          },
         ),
       ],
     );

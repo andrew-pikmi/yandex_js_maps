@@ -179,15 +179,13 @@ class _YandexJsMapState extends State<YandexJsMap> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: HtmlElementView(
-        viewType: 'yandex-map-html-$mapId',
+    return HtmlElementView(
+      viewType: 'yandex-map-html-$mapId',
 
-        /// Call onMapCreated only after JS initialization completes
-        onPlatformViewCreated: (_) {
-          _readyCompleter.future.then((_) => widget.onMapCreated(controller));
-        },
-      ),
+      /// Call onMapCreated only after JS initialization completes
+      onPlatformViewCreated: (_) {
+        _readyCompleter.future.then((_) => widget.onMapCreated(controller));
+      },
     );
   }
 }
