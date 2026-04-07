@@ -146,20 +146,19 @@ external JSPromise setThemeJs(JSAny? theme, JSAny? customization, String mapId);
 /// All methods return Futures that complete when
 /// the corresponding JavaScript operation finishes.
 class YandexJsMapController {
-  YandexJsMapController._(
-      this._mapId, this.placemarks, this.polygons, this.polylines);
+  YandexJsMapController._(this._mapId);
 
   /// Internal map identifier used for DOM element reference
   final String _mapId;
 
-  /// List of currently displayed placemarks on the map
-  final List<PlacemarkEntity> placemarks;
+  final List<PlacemarkEntity> _placemarks = [];
+  final List<PolygonEntity> _polygons = [];
+  final List<PolylineEntity> _polylines = [];
+  final List<String> _clusterIds = [];
 
-  /// List of currently displayed polygons on the map
-  final List<PolygonEntity> polygons;
-
-  /// List of currently displayed polylines on the map
-  final List<PolylineEntity> polylines;
+  List<PlacemarkEntity> get placemarks => List.unmodifiable(_placemarks);
+  List<PolygonEntity> get polygons => List.unmodifiable(_polygons);
+  List<PolylineEntity> get polylines => List.unmodifiable(_polylines);
 
   // Tap callbacks are stored in static Dart Maps keyed by entity ID.
   // A single JS dispatcher per type routes click events from the JS layer to Dart.
@@ -218,13 +217,7 @@ class YandexJsMapController {
   }
 
   /// Internal initializer used by the factory to create controller instances
-  static YandexJsMapController _init(
-    String id,
-    List<PlacemarkEntity> placemarks,
-    List<PolygonEntity> polygons,
-    List<PolylineEntity> polylines,
-  ) =>
-      YandexJsMapController._(id, placemarks, polygons, polylines);
+  static YandexJsMapController _init(String id) => YandexJsMapController._(id);
 
   // Map View Operations ======================================================
 
@@ -331,6 +324,7 @@ class YandexJsMapController {
       _mapId,
       placemark.id,
     ).toDart;
+    _placemarks.add(placemark);
   }
 
   /// Removes a placemark from the map.
@@ -339,6 +333,7 @@ class YandexJsMapController {
   Future<void> removePlacemark(String placemarkId) async {
     _placemarkTapCallbacks.remove(placemarkId);
     await removePlacemarkJs(placemarkId, _mapId).toDart;
+    _placemarks.removeWhere((e) => e.id == placemarkId);
   }
 
   /// Updates the position of an existing placemark.
@@ -385,13 +380,16 @@ class YandexJsMapController {
       _mapId,
       polygon.id,
     ).toDart;
+    _polygons.add(polygon);
   }
 
   /// Removes a polygon from the map.
   ///
   /// - [polygonId] The ID of the polygon to remove
-  Future<void> removePolygon(String polygonId) async =>
-      await removePolygonJs(polygonId, _mapId).toDart;
+  Future<void> removePolygon(String polygonId) async {
+    await removePolygonJs(polygonId, _mapId).toDart;
+    _polygons.removeWhere((e) => e.id == polygonId);
+  }
 
   /// Updates the geometry (vertex coordinates) of a polygon.
   ///
@@ -439,13 +437,16 @@ class YandexJsMapController {
       _mapId,
       polyline.id,
     ).toDart;
+    _polylines.add(polyline);
   }
 
   /// Removes a polyline from the map.
   ///
   /// - [polylineId] The ID of the polyline to remove
-  Future<void> removePolyline(String polylineId) async =>
-      await removePolylineJs(polylineId, _mapId).toDart;
+  Future<void> removePolyline(String polylineId) async {
+    await removePolylineJs(polylineId, _mapId).toDart;
+    _polylines.removeWhere((e) => e.id == polylineId);
+  }
 
   /// Updates the geometry (vertex coordinates) of a polyline.
   ///
@@ -541,6 +542,7 @@ class YandexJsMapController {
       });
     }
     await addClusterJs(_jsify(cluster.toJson()), _mapId).toDart;
+    _clusterIds.add(cluster.id);
   }
 
   static Map<String, dynamic> _serializeAppearance(
@@ -571,6 +573,22 @@ class YandexJsMapController {
     _builderTapIds.remove(clusterId)?.forEach(_clusterTapCallbacks.remove);
     js.context.deleteProperty('_yandexMapClusterIconBuilder_$clusterId');
     await removeClusterJs(clusterId, _mapId).toDart;
+    _clusterIds.remove(clusterId);
+  }
+
+  void dispose() {
+    for (final p in _placemarks) {
+      _placemarkTapCallbacks.remove(p.id);
+    }
+    for (final clusterId in _clusterIds) {
+      _clusterTapCallbacks.remove(clusterId);
+      _clusterPlacemarkIds
+          .remove(clusterId)
+          ?.forEach(_placemarkTapCallbacks.remove);
+      _builderTapIds.remove(clusterId)?.forEach(_clusterTapCallbacks.remove);
+      js.context.deleteProperty('_yandexMapClusterIconBuilder_$clusterId');
+    }
+    _userLocationCallbacks.remove(_mapId);
   }
 
   /// Replaces the placemarks inside an existing cluster.

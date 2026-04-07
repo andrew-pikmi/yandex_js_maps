@@ -462,8 +462,9 @@ class _PolygonsTab extends StatelessWidget {
               center: PointEntity(55.751, 37.616),
               zoom: 12,
             ),
-            polygons: [
-              PolygonEntity(
+            onMapTap: (p) => onEvent('Polygon map tap: ${_fmt(p)}'),
+            onMapCreated: (ctrl) {
+              unawaited(ctrl.addPolygon(PolygonEntity(
                 geometry: const [
                   [
                     PointEntity(55.742, 37.600),
@@ -480,10 +481,8 @@ class _PolygonsTab extends StatelessWidget {
                   strokeColor: '1b5e20',
                   strokeWidth: 3,
                 ),
-              ),
-            ],
-            onMapTap: (p) => onEvent('Polygon map tap: ${_fmt(p)}'),
-            onMapCreated: (_) {},
+              )));
+            },
           ),
         ),
       ],
@@ -507,8 +506,9 @@ class _PolylinesTab extends StatelessWidget {
               center: PointEntity(55.752, 37.624),
               zoom: 12,
             ),
-            polylines: [
-              PolylineEntity(
+            onMapTap: (p) => onEvent('Polyline map tap: ${_fmt(p)}'),
+            onMapCreated: (ctrl) {
+              unawaited(ctrl.addPolyline(PolylineEntity(
                 geometry: const [
                   PointEntity(55.745, 37.607),
                   PointEntity(55.750, 37.617),
@@ -521,10 +521,8 @@ class _PolylinesTab extends StatelessWidget {
                   strokeWidth: 4,
                   strokeOpacity: 0.95,
                 ),
-              ),
-            ],
-            onMapTap: (p) => onEvent('Polyline map tap: ${_fmt(p)}'),
-            onMapCreated: (_) {},
+              )));
+            },
           ),
         ),
       ],
@@ -564,7 +562,7 @@ class _CameraTabState extends State<_CameraTab> {
                           const PointEntity(55.751244, 37.618423),
                           zoom: 15,
                         ),
-                child: const Text('→ Kremlin'),
+                child: const Text('Kremlin'),
               ),
               ElevatedButton(
                 onPressed: _ctrl == null
@@ -573,7 +571,7 @@ class _CameraTabState extends State<_CameraTab> {
                           const PointEntity(55.755864, 37.617698),
                           zoom: 11,
                         ),
-                child: const Text('→ Moscow'),
+                child: const Text('Moscow'),
               ),
               ElevatedButton(
                 onPressed: _ctrl == null

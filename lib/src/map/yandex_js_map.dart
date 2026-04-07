@@ -14,9 +14,6 @@ class YandexJsMap extends StatefulWidget {
     super.key,
     required this.onMapCreated,
     this.mapState = const MapState(),
-    this.placemarks = const [],
-    this.polygons = const [],
-    this.polylines = const [],
     this.onCameraPositionChanged,
     this.onMapTap,
     this.onMapLongTap,
@@ -24,15 +21,6 @@ class YandexJsMap extends StatefulWidget {
 
   /// The initial view state of the map
   final MapState mapState;
-
-  /// List of placemarks to display when the map initializes
-  final List<PlacemarkEntity> placemarks;
-
-  /// List of polygons to display when the map initializes
-  final List<PolygonEntity> polygons;
-
-  /// List of polylines to display when the map initializes
-  final List<PolylineEntity> polylines;
 
   /// Called on every camera update.
   /// [finished] is true when the camera has stopped moving.
@@ -87,12 +75,6 @@ class _YandexJsMapState extends State<YandexJsMap> {
 
         // Convert Dart objects to JavaScript-compatible formats
         final jsState = js.JsObject.jsify(widget.mapState.toJson());
-        final jsPlacemarks = js.JsArray.from(
-            widget.placemarks.map((e) => js.JsObject.jsify(e.toJson())));
-        final jsPolygons = js.JsArray.from(
-            widget.polygons.map((e) => js.JsObject.jsify(e.toJson())));
-        final jsPolylines = js.JsArray.from(
-            widget.polylines.map((e) => js.JsObject.jsify(e.toJson())));
 
         // Build callbacks object for camera and input listeners
         final jsCallbacks = js.JsObject(js.context['Object']);
@@ -136,14 +118,8 @@ class _YandexJsMapState extends State<YandexJsMap> {
         // Initialize the Yandex Map through JavaScript interop.
         // initYandexMap returns a JS Promise; wire Dart Completer via dart:js .then()
         // to avoid dart:js_util.promiseToFuture incompatibility with JsObject wrappers.
-        final initPromise = js.context.callMethod('initYandexMap', [
-          divId,
-          jsState,
-          jsPlacemarks,
-          jsPolygons,
-          jsPolylines,
-          jsCallbacks
-        ]) as js.JsObject;
+        final initPromise = js.context.callMethod(
+            'initYandexMap', [divId, jsState, jsCallbacks]) as js.JsObject;
 
         initPromise.callMethod('then', [
           js.allowInterop((dynamic _) {
@@ -158,8 +134,7 @@ class _YandexJsMapState extends State<YandexJsMap> {
         ]);
 
         // Create controller instance
-        controller = YandexJsMapController._init(
-            divId, widget.placemarks, widget.polygons, widget.polylines);
+        controller = YandexJsMapController._init(divId);
 
         return element;
       },
@@ -168,6 +143,7 @@ class _YandexJsMapState extends State<YandexJsMap> {
 
   @override
   void dispose() {
+    controller.dispose();
     final placemarksIds =
         js.JsArray.from(controller.placemarks.map((e) => e.id));
     final polygonsIds = js.JsArray.from(controller.polygons.map((e) => e.id));
