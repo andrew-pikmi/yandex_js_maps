@@ -21,8 +21,8 @@ class ClusterOptions {
     this.gridSize = 64,
     this.maxZoom,
     this.showClusterCount = true,
-    this.style = const ClusterCircleStyle(),
-  });
+    ClusterStyle? style,
+  }) : style = style ?? const ClusterCircleStyle();
 
   Map<String, dynamic> toJson() => {
         'gridSize': gridSize,

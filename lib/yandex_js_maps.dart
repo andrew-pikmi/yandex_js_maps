@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 part 'src/entity/point_entity.dart';
 part 'src/entity/camera_position.dart';
 part 'src/enums/map_behavior.dart';
+part 'src/geo_objects/options/common/map_object_image_style.dart';
 part 'src/geo_objects/options/placemark_style.dart';
 part 'src/geo_objects/options/cluster_style.dart';
 part 'src/geo_objects/options/placemark_options.dart';

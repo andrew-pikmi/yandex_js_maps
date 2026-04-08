@@ -16,11 +16,11 @@ class PlacemarkOptions {
   final String cursor;
 
   const PlacemarkOptions({
-    this.style = const PlacemarkCircleStyle(),
+    PlacemarkStyle? style,
     this.draggable = false,
     this.visible = true,
     this.cursor = 'pointer',
-  });
+  }) : style = style ?? const PlacemarkCircleStyle();
 
   Map<String, dynamic> toJson() => {
         ...style.toJson(),

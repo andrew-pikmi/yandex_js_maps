@@ -47,15 +47,20 @@ class ClusterCircleStyle extends ClusterStyle {
 /// Custom image cluster marker style.
 /// By default the image is rendered at its natural size.
 /// Use [iconSize] to set an explicit display size in logical pixels.
-class ClusterImageStyle extends ClusterStyle {
+class ClusterImageStyle extends ClusterStyle implements MapObjectImageStyle {
   /// Raw image bytes, encoded as a base64 data URL and passed to JS.
+  @override
   final Uint8List iconBytes;
 
   /// Logical display size for the cluster icon in pixels.
   /// If null the image renders at its natural (intrinsic) dimensions.
+  @override
   final ({int width, int height})? iconSize;
 
-  ClusterImageStyle({required this.iconBytes, this.iconSize});
+  const ClusterImageStyle({
+    required this.iconBytes,
+    this.iconSize,
+  });
 
   @override
   Map<String, dynamic> toJson() => {
